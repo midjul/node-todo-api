@@ -10,7 +10,10 @@ const todos=[{
   _id: new ObjectID(),
   text:"abc"}, {
   _id:new ObjectID(),
-    text:"cbc"}];
+    text:"cbc",
+   completed:false,
+   completedAt:333
+  }];
 beforeEach((done)=>{
   Todo.remove({}).then(()=>{
    return Todo.insertMany(todos);
@@ -141,6 +144,43 @@ request(app)
       .delete('/todos/123ss')
       .expect(404)
       .end(done);
+
+  });
+});
+
+describe('PATCH /todos/:id', ()=>{
+ it('should update the todo', (done)=>{
+   var todo=todos[1];
+   todo.text="update";
+   todo.completed=true;
+   request(app)
+   .patch(`/todos/${todo._id}`)
+   .send(todo)
+   .expect(200)
+   .expect((res)=>{
+     expect(res.body.todo.text).toBe(todo.text);
+     expect(res.body.todo.completed).toBe(true);
+     expect(res.body.todo.completedAt).toBeA('number');
+
+    //console.log(res.body.todo.text);
+   })
+   .end(done);
+ });
+
+  it("should clear completedAt when todo is not completed", (done)=>{
+  var todo=todos[1];
+  todo.text="new text";
+  todo.completed=false;
+ request(app)
+ .patch(`/todos/${todo._id}`)
+ .send(todo)
+ .expect(200)
+ .expect((res)=>{
+  expect(res.body.todo.text).toBe(todo.text);
+  expect(res.body.todo.completed).toBe(false);
+  expect(res.body.todo.completedAt).toNotExist();
+})
+.end(done);
 
   });
 });
